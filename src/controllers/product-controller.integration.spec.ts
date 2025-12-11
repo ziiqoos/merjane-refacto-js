@@ -11,7 +11,7 @@ import {
   orders,
   ordersToProducts,
 } from "@/db/schema.js";
-import { ProductType } from "@/utils/enums/product-type.js";
+import { PRODUCT_TYPES } from "@/domain/product.js";
 import { type Database } from "@/db/type.js";
 import { buildFastify } from "@/fastify.js";
 
@@ -40,7 +40,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 15,
         available: 2,
-        type: ProductType.NORMAL,
+        type: PRODUCT_TYPES.NORMAL,
         name: "USB Cable",
       },
     ]);
@@ -61,7 +61,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 10,
         available: 0,
-        type: ProductType.NORMAL,
+        type: PRODUCT_TYPES.NORMAL,
         name: "USB Dongle",
       },
     ]);
@@ -85,7 +85,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 15,
         available: 3,
-        type: ProductType.SEASONAL,
+        type: PRODUCT_TYPES.SEASONAL,
         name: "Watermelon",
         seasonStartDate: new Date(now - 2 * DAY),
         seasonEndDate: new Date(now + 30 * DAY),
@@ -110,7 +110,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 15,
         available: 5,
-        type: ProductType.SEASONAL,
+        type: PRODUCT_TYPES.SEASONAL,
         name: "Grapes",
         seasonStartDate: new Date(now + 30 * DAY),
         seasonEndDate: new Date(now + 60 * DAY),
@@ -135,7 +135,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 15,
         available: 0,
-        type: ProductType.SEASONAL,
+        type: PRODUCT_TYPES.SEASONAL,
         name: "Grapes",
         seasonStartDate: new Date(now - 2 * DAY),
         seasonEndDate: new Date(now + 5 * DAY),
@@ -160,7 +160,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 3,
         available: 0,
-        type: ProductType.SEASONAL,
+        type: PRODUCT_TYPES.SEASONAL,
         name: "Watermelon",
         seasonStartDate: new Date(now - 2 * DAY),
         seasonEndDate: new Date(now + 30 * DAY),
@@ -189,7 +189,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 15,
         available: 2,
-        type: ProductType.EXPIRABLE,
+        type: PRODUCT_TYPES.EXPIRABLE,
         name: "Butter",
         expiryDate: new Date(now + 10 * DAY),
       },
@@ -214,7 +214,7 @@ describe("ProductController Integration Tests", () => {
       {
         leadTime: 90,
         available: 3,
-        type: ProductType.EXPIRABLE,
+        type: PRODUCT_TYPES.EXPIRABLE,
         name: "Milk",
         expiryDate,
       },

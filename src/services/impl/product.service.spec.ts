@@ -6,9 +6,14 @@ import {
   cleanUp,
 } from "../../utils/test-utils/database-tools.ts.js";
 import { ProductService } from "./product.service.js";
-import { products, type Product } from "@/db/schema.js";
-import { ProductType } from "@/utils/enums/product-type.js";
+import { products } from "@/db/schema.js";
+import { type Product, PRODUCT_TYPES } from "@/domain/product.js";
 import { type Database } from "@/db/type.js";
+import { SQLiteProductRepository } from "@/repositories/sqlite-product.repository.js";
+import { NormalProductHandler } from "@/services/product-handlers/normal-product.handler.js";
+import { SeasonalProductHandler } from "@/services/product-handlers/seasonal-product.handler.js";
+import { ExpirableProductHandler } from "@/services/product-handlers/expirable-product.handler.js";
+import { type IProductHandler } from "@/services/product-handler.js";
 
 describe("ProductService Tests", () => {
   let notificationServiceMock: DeepMockProxy<INotificationService>;
@@ -21,9 +26,30 @@ describe("ProductService Tests", () => {
   beforeEach(async () => {
     ({ databaseMock, databaseName } = await createDatabaseMock());
     notificationServiceMock = mockDeep<INotificationService>();
+    const productRepository = new SQLiteProductRepository({
+      db: databaseMock,
+    } as any);
+    const handlers: Map<
+      (typeof PRODUCT_TYPES)[keyof typeof PRODUCT_TYPES],
+      IProductHandler
+    > = new Map([
+      [
+        PRODUCT_TYPES.NORMAL,
+        new NormalProductHandler(notificationServiceMock, productRepository),
+      ],
+      [
+        PRODUCT_TYPES.SEASONAL,
+        new SeasonalProductHandler(notificationServiceMock, productRepository),
+      ],
+      [
+        PRODUCT_TYPES.EXPIRABLE,
+        new ExpirableProductHandler(notificationServiceMock, productRepository),
+      ],
+    ]);
     productService = new ProductService({
       ns: notificationServiceMock,
-      db: databaseMock,
+      pr: productRepository,
+      productHandlersByType: handlers,
     });
   });
 
@@ -36,7 +62,7 @@ describe("ProductService Tests", () => {
     const product = await insertProduct({
       id: 1,
       name: "RJ45 Cable",
-      type: ProductType.NORMAL,
+      type: PRODUCT_TYPES.NORMAL,
       available: 2,
     });
 
@@ -55,7 +81,7 @@ describe("ProductService Tests", () => {
     const product = await insertProduct({
       id: 2,
       name: "RJ45 Cable",
-      type: ProductType.NORMAL,
+      type: PRODUCT_TYPES.NORMAL,
       available: 0,
       leadTime: 7,
     });
@@ -75,7 +101,7 @@ describe("ProductService Tests", () => {
     // GIVEN
     const product = await insertProduct({
       id: 3,
-      type: ProductType.SEASONAL,
+      type: PRODUCT_TYPES.SEASONAL,
       name: "Watermelon",
       available: 3,
       seasonStartDate: new Date(now - 5 * DAY),
@@ -96,7 +122,7 @@ describe("ProductService Tests", () => {
     // GIVEN
     const product = await insertProduct({
       id: 4,
-      type: ProductType.SEASONAL,
+      type: PRODUCT_TYPES.SEASONAL,
       name: "Cherry",
       available: 5,
       seasonStartDate: new Date(now + 30 * DAY),
@@ -117,7 +143,7 @@ describe("ProductService Tests", () => {
     // GIVEN
     const product = await insertProduct({
       id: 5,
-      type: ProductType.SEASONAL,
+      type: PRODUCT_TYPES.SEASONAL,
       name: "Grapes",
       available: 0,
       leadTime: 15,
@@ -139,7 +165,7 @@ describe("ProductService Tests", () => {
     // GIVEN
     const product = await insertProduct({
       id: 6,
-      type: ProductType.SEASONAL,
+      type: PRODUCT_TYPES.SEASONAL,
       name: "Melon",
       available: 0,
       leadTime: 3,
@@ -165,7 +191,7 @@ describe("ProductService Tests", () => {
     // GIVEN
     const product = await insertProduct({
       id: 7,
-      type: ProductType.EXPIRABLE,
+      type: PRODUCT_TYPES.EXPIRABLE,
       name: "Milk",
       available: 2,
       expiryDate: new Date(now + 30 * DAY),
@@ -186,7 +212,7 @@ describe("ProductService Tests", () => {
     const expiryDate = new Date(now - 2 * DAY);
     const product = await insertProduct({
       id: 8,
-      type: ProductType.EXPIRABLE,
+      type: PRODUCT_TYPES.EXPIRABLE,
       name: "Yogurt",
       available: 3,
       expiryDate,
@@ -207,7 +233,7 @@ describe("ProductService Tests", () => {
       id: 1,
       leadTime: 1,
       available: 1,
-      type: ProductType.NORMAL,
+      type: PRODUCT_TYPES.NORMAL,
       name: "Default",
       expiryDate: null,
       seasonStartDate: null,
